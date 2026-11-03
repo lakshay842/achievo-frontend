@@ -43,4 +43,30 @@ if (!fs.existsSync(dist)) {
 }
 
 walk(dist);
+
+// Soft-recover unknown deep links on static hosts (direct /login before cleanUrls).
+fs.writeFileSync(
+  path.join(dist, '404.html'),
+  `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Achievo</title>
+    <script>
+      (function () {
+        var next = location.pathname + location.search + location.hash;
+        if (!next || next === '/' || next === '/404.html') {
+          location.replace('/');
+          return;
+        }
+        location.replace('/?next=' + encodeURIComponent(next));
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
+`,
+);
+
 console.log('Prepared directory indexes for static routes in dist/');

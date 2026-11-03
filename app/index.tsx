@@ -1,7 +1,7 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,6 +11,22 @@ import { BRAND, SPLASH_BACKGROUND } from '@/constants/brand';
 import { useAuthStore } from '@/store/auth.store';
 
 const MINIMUM_VISIBLE_MS = 1100;
+
+function readWebNextPath(): string | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (!next || !next.startsWith('/') || next.startsWith('//')) {
+      return null;
+    }
+    return next;
+  } catch {
+    return null;
+  }
+}
 
 export default function SplashRoute() {
   const status = useAuthStore((state) => state.status);
@@ -34,6 +50,12 @@ export default function SplashRoute() {
     }
 
     navigated.current = true;
+
+    const nextPath = readWebNextPath();
+    if (nextPath) {
+      router.replace(nextPath as Href);
+      return;
+    }
 
     if (status === 'authenticated') {
       router.replace('/(tabs)');
