@@ -3,5 +3,25 @@
   "outputDirectory": "dist",
   "framework": null,
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/register", "destination": "/register.html" },
+    { "source": "/forgot-password", "destination": "/forgot-password.html" },
+    { "source": "/welcome", "destination": "/welcome.html" },
+    { "source": "/interests", "destination": "/interests.html" },
+    { "source": "/preferences", "destination": "/preferences.html" },
+    { "source": "/notification-permission", "destination": "/notification-permission.html" },
+    { "source": "/goals", "destination": "/goals.html" },
+    { "source": "/goals/create", "destination": "/goals/create.html" },
+    { "source": "/goals/clarification", "destination": "/goals/clarification.html" },
+    { "source": "/goals/roadmap-preview", "destination": "/goals/roadmap-preview.html" },
+    { "source": "/goals/:goalId", "destination": "/goals/[goalId].html" },
+    { "source": "/tasks/:taskId", "destination": "/tasks/[taskId].html" },
+    { "source": "/coach", "destination": "/coach.html" },
+    { "source": "/profile", "destination": "/profile.html" },
+    { "source": "/progress", "destination": "/progress.html" },
+    { "source": "/notifications", "destination": "/notifications/index.html" },
+    { "source": "/notifications/", "destination": "/notifications/index.html" }
+  ]
 }
