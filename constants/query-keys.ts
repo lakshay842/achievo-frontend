@@ -1,0 +1,15 @@
+export const queryKeys = {
+  me: ['me'] as const,
+  goals: (status?: string) => ['goals', status ?? 'all'] as const,
+  goal: (id: string) => ['goal', id] as const,
+  todayTasks: ['tasks', 'today'] as const,
+  task: (id: string) => ['task', id] as const,
+  roadmap: (id: string) => ['roadmap', id] as const,
+  progressOverview: ['progress', 'overview'] as const,
+  progressWeekly: ['progress', 'weekly'] as const,
+  progressMonthly: ['progress', 'monthly'] as const,
+  streaks: ['progress', 'streaks'] as const,
+  motivation: ['coach', 'motivation'] as const,
+  coachHistory: ['coach', 'history'] as const,
+  notifications: ['notifications'] as const,
+};
