@@ -50,6 +50,8 @@ export function forgotPassword(email: string) {
     method: 'POST',
     url: '/auth/forgot-password',
     data: { email },
+    // Render free tier can cold-start for 30–50s before the API answers.
+    timeout: 60_000,
   });
 }
 
