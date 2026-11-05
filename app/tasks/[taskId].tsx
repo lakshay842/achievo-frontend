@@ -10,7 +10,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -64,6 +64,7 @@ function ActionPill({
   onPress,
   flex = false,
   solid = false,
+  selected = false,
 }: {
   label: string;
   icon: LucideIcon;
@@ -72,14 +73,17 @@ function ActionPill({
   onPress: () => void;
   flex?: boolean;
   solid?: boolean;
+  selected?: boolean;
 }) {
   const { colors } = useTheme();
-  const textColor = solid ? colors.onPrimary : color;
+  const filled = solid || selected;
+  const textColor = filled ? colors.onPrimary : color;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ selected, busy: Boolean(loading) }}
       disabled={loading}
       onPress={onPress}
       style={({ pressed }) => ({
@@ -87,9 +91,9 @@ function ActionPill({
         width: flex ? undefined : '100%',
         minHeight: 52,
         borderRadius: radius.full,
-        borderWidth: solid ? 0 : 1,
+        borderWidth: filled ? 0 : 1,
         borderColor: `${color}55`,
-        backgroundColor: solid
+        backgroundColor: filled
           ? pressed
             ? colors.primaryPressed
             : color
@@ -173,14 +177,29 @@ export default function TaskDetailsScreen() {
 
   const feedbackMutation = useMutation({
     mutationFn: (difficulty: 'easy' | 'moderate' | 'hard') =>
-      sendTaskFeedback(taskId!, { difficulty, note: feedbackNote.trim() || undefined }),
-    onSuccess: async () => {
-      setFeedbackNote('');
+      sendTaskFeedback(taskId!, {
+        difficulty,
+        note: feedbackNote.trim() ? feedbackNote.trim() : undefined,
+      }),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(queryKeys.task(taskId!), updated);
+      setFeedbackNote(updated.feedbackNote ?? '');
+      showToast(
+        updated.difficultyFeedback === 'moderate'
+          ? 'Saved as OK'
+          : `Saved as ${updated.difficultyFeedback}`,
+        'success',
+      );
       await invalidate();
-      showToast('Feedback saved', 'success');
     },
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
+
+  useEffect(() => {
+    if (taskQuery.data?.feedbackNote != null) {
+      setFeedbackNote(taskQuery.data.feedbackNote);
+    }
+  }, [taskQuery.data?.id, taskQuery.data?.feedbackNote]);
 
   const explainMutation = useMutation({
     mutationFn: () => explainTask(taskId!),
@@ -336,7 +355,7 @@ export default function TaskDetailsScreen() {
           Instructions
         </AppText>
         <AppText variant="caption" tone="muted">
-          Kaise karna hai — step by step
+          How to complete the task — step by step
         </AppText>
         {(task.instructions ?? []).length === 0 ? (
           <AppText variant="body" tone="muted">
@@ -372,7 +391,7 @@ export default function TaskDetailsScreen() {
           Done when
         </AppText>
         <AppText variant="caption" tone="muted">
-          Complete tabhi mark karo jab yeh true ho
+          Mark complete only when these are true
         </AppText>
         {(task.completionCriteria ?? []).length === 0 ? (
           <AppText variant="body" tone="muted">
@@ -395,17 +414,25 @@ export default function TaskDetailsScreen() {
           <AppText variant="label">How did this feel?</AppText>
           <AppText variant="caption" tone="muted">
             {task.difficultyFeedback
-              ? `Saved as ${task.difficultyFeedback}. You can update it.`
-              : 'Easy, moderate, or hard keeps the next plan realistic.'}
+              ? `Saved as ${
+                  task.difficultyFeedback === 'moderate' ? 'OK' : task.difficultyFeedback
+                }. Tap again to change it.`
+              : 'Easy, OK, or Hard keeps the next plan realistic.'}
           </AppText>
-          <TextField label="Optional note" value={feedbackNote} onChangeText={setFeedbackNote} />
+          <TextField
+            label="Optional note"
+            value={feedbackNote}
+            onChangeText={setFeedbackNote}
+            placeholder="What made it feel that way?"
+          />
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <ActionPill
               label="Easy"
               icon={CheckCircle2}
               color={colors.primary}
               flex
-              loading={feedbackMutation.isPending}
+              selected={task.difficultyFeedback === 'easy'}
+              loading={feedbackMutation.isPending && feedbackMutation.variables === 'easy'}
               onPress={() => feedbackMutation.mutate('easy')}
             />
             <ActionPill
@@ -413,7 +440,8 @@ export default function TaskDetailsScreen() {
               icon={CircleDashed}
               color={colors.lavender}
               flex
-              loading={feedbackMutation.isPending}
+              selected={task.difficultyFeedback === 'moderate'}
+              loading={feedbackMutation.isPending && feedbackMutation.variables === 'moderate'}
               onPress={() => feedbackMutation.mutate('moderate')}
             />
             <ActionPill
@@ -421,7 +449,8 @@ export default function TaskDetailsScreen() {
               icon={SkipForward}
               color={colors.coral}
               flex
-              loading={feedbackMutation.isPending}
+              selected={task.difficultyFeedback === 'hard'}
+              loading={feedbackMutation.isPending && feedbackMutation.variables === 'hard'}
               onPress={() => feedbackMutation.mutate('hard')}
             />
           </View>
@@ -433,7 +462,28 @@ export default function TaskDetailsScreen() {
           <AppText variant="kicker" style={{ color: colors.coral }}>
             AI help
           </AppText>
-          <AppText variant="body">{explanation}</AppText>
+          <View style={{ gap: 8 }}>
+            {explanation.split(/\n+/).map((line, index) => {
+              const bullet = line.match(/^\s*[•\-\u2022]\s+(.*)$/);
+              if (bullet) {
+                return (
+                  <View key={`ai-help-${index}`} style={{ flexDirection: 'row', gap: 8, paddingRight: 4 }}>
+                    <AppText variant="body" style={{ color: colors.coral, lineHeight: 24 }}>
+                      •
+                    </AppText>
+                    <AppText variant="body" style={{ flex: 1 }}>
+                      {bullet[1]}
+                    </AppText>
+                  </View>
+                );
+              }
+              return (
+                <AppText key={`ai-help-${index}`} variant="body">
+                  {line}
+                </AppText>
+              );
+            })}
+          </View>
         </Card>
       ) : null}
 
@@ -449,7 +499,7 @@ export default function TaskDetailsScreen() {
                     ? 'Skip this task?'
                     : 'Reschedule this task?'
             }
-            message="Confirm karo — update Achievo account pe save hoga."
+            message="Confirm to save this update to your Achievo account."
             tone="warning"
           />
           {pending === 'reschedule' ? (

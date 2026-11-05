@@ -1,2 +1,1 @@
-/** Coach transcript components are added with the chat screen. */
-export {};
+export { TypingDots } from '@/components/coach/typing-dots';

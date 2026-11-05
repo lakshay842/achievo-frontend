@@ -6,27 +6,45 @@ export type AppError = {
   offline: boolean;
 };
 
+function readDetailMessage(data: object): string | undefined {
+  if (!('details' in data) || !Array.isArray(data.details) || !data.details[0]) {
+    return undefined;
+  }
+
+  const first = data.details[0];
+  if (first && typeof first === 'object' && 'message' in first && typeof first.message === 'string') {
+    const message = first.message.trim();
+    return message || undefined;
+  }
+
+  return undefined;
+}
+
 function readServerMessage(data: unknown): string | undefined {
   if (!data || typeof data !== 'object') {
     return undefined;
   }
 
-  if ('message' in data && typeof data.message === 'string' && data.message.trim()) {
-    return data.message;
+  const detailMessage = readDetailMessage(data);
+  const topMessage =
+    'message' in data && typeof data.message === 'string' && data.message.trim()
+      ? data.message.trim()
+      : undefined;
+
+  // Prefer field-level details over generic "Validation failed".
+  if (detailMessage && (!topMessage || /^validation failed$/i.test(topMessage))) {
+    return detailMessage;
+  }
+
+  if (topMessage) {
+    return topMessage;
   }
 
   if ('error' in data && typeof data.error === 'string' && data.error.trim()) {
-    return data.error;
+    return data.error.trim();
   }
 
-  if ('details' in data && Array.isArray(data.details) && data.details[0]) {
-    const first = data.details[0];
-    if (first && typeof first === 'object' && 'message' in first && typeof first.message === 'string') {
-      return first.message;
-    }
-  }
-
-  return undefined;
+  return detailMessage;
 }
 
 export function isAppError(error: unknown): error is AppError {

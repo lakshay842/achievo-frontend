@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/common/app-text';
 import { BrandMark } from '@/components/common/brand-mark';
-import { BRAND, SPLASH_BACKGROUND } from '@/constants/brand';
+import { BRAND, SPLASH_ACCENT, SPLASH_BACKGROUND, SPLASH_MUTED } from '@/constants/brand';
 import { useAuthStore } from '@/store/auth.store';
 
 const MINIMUM_VISIBLE_MS = 1100;
@@ -81,16 +81,16 @@ export default function SplashRoute() {
       <View className="flex-1 items-center justify-center px-8" style={{ gap: 28 }}>
         <Animated.View style={[{ alignItems: 'center', gap: 18 }, animatedStyle]}>
           <BrandMark size={92} />
-          <AppText variant="title" tone="inverse" style={{ textAlign: 'center' }}>
+          <AppText variant="title" style={{ textAlign: 'center', color: '#F5F5F5' }}>
             {BRAND.name}
           </AppText>
-          <AppText variant="body" style={{ color: '#C4B5FD', textAlign: 'center' }}>
+          <AppText variant="body" style={{ color: SPLASH_MUTED, textAlign: 'center' }}>
             {BRAND.tagline}
           </AppText>
         </Animated.View>
         <View className="items-center" style={{ gap: 10 }}>
-          <ActivityIndicator color="#A78BFA" />
-          <AppText variant="caption" style={{ color: '#A7A7C2' }}>
+          <ActivityIndicator color={SPLASH_ACCENT} />
+          <AppText variant="caption" style={{ color: SPLASH_MUTED }}>
             {bootstrapped ? 'Opening your workspace' : 'Checking your session'}
           </AppText>
         </View>

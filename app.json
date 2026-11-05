@@ -15,7 +15,7 @@
     "android": {
       "package": "com.achievo.ai",
       "adaptiveIcon": {
-        "backgroundColor": "#7657F6",
+        "backgroundColor": "#050505",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#11111B",
+          "backgroundColor": "#050505",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 96
         }
@@ -41,7 +41,7 @@
       [
         "expo-notifications",
         {
-          "color": "#7657F6",
+          "color": "#C8F54A",
           "defaultChannel": "default"
         }
       ]

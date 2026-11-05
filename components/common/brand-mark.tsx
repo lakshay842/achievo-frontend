@@ -35,7 +35,10 @@ export function BrandMark({ size = 72 }: BrandMarkProps) {
           justifyContent: 'center',
         }}
       >
-        <AppText variant="display" tone="inverse" style={{ fontSize: size * 0.46, lineHeight: size * 0.56 }}>
+        <AppText
+          variant="display"
+          style={{ fontSize: size * 0.46, lineHeight: size * 0.56, color: BRAND.markInk }}
+        >
           A
         </AppText>
       </LinearGradient>

@@ -8,6 +8,23 @@ import path from 'node:path';
  */
 const dist = path.resolve('dist');
 
+/**
+ * Vercel rewrites cannot reliably target Expo's `[param].html` files
+ * (brackets are special in the router). Copy to stable names used by vercel.json.
+ */
+const DYNAMIC_HTML_ALIASES = new Map([
+  ['[goalId].html', '_goalId.html'],
+  ['[taskId].html', '_taskId.html'],
+]);
+
+function copyDynamicAlias(htmlFile) {
+  const name = path.basename(htmlFile);
+  const alias = DYNAMIC_HTML_ALIASES.get(name);
+  if (!alias) return;
+  const target = path.join(path.dirname(htmlFile), alias);
+  fs.copyFileSync(htmlFile, target);
+}
+
 function copyAsDirectoryIndex(htmlFile) {
   const dir = path.dirname(htmlFile);
   const base = path.basename(htmlFile, '.html');
@@ -32,6 +49,7 @@ function walk(dir) {
       continue;
     }
     if (entry.isFile() && entry.name.endsWith('.html')) {
+      copyDynamicAlias(full);
       copyAsDirectoryIndex(full);
     }
   }

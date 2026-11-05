@@ -15,18 +15,18 @@ import { useAuthStore } from '@/store/auth.store';
 const points = [
   {
     icon: Target,
-    title: 'Your plan',
-    body: 'Describe a goal in your own words. Review the roadmap before it starts.',
+    title: 'One clear plan',
+    body: 'Write what you want to learn or change. Get daily tasks in one place — no hopping across apps.',
   },
   {
     icon: Sparkles,
     title: 'Your coach',
-    body: 'Ask for help, practice, and a push when the work gets quiet.',
+    body: 'Ask for help, practice, or a push. Achievo gives a clear next step.',
   },
   {
     icon: TrendingUp,
     title: 'Your progress',
-    body: 'See what you finished, what you missed, and the time you put in.',
+    body: 'See what you finished, what you missed, and the time you put in — all kept here.',
   },
 ] as const;
 

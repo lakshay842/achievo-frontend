@@ -15,7 +15,7 @@ import { useOnboardingStore } from '@/store/onboarding.store';
 import { getErrorMessage } from '@/utils/errors';
 
 const schema = z.object({
-  email: z.email('Enter a valid email'),
+  email: z.string().trim().min(1, 'Email is required').pipe(z.email('Enter a valid email')),
   password: z.string().min(1, 'Password is required'),
 });
 
@@ -30,9 +30,11 @@ export default function LoginScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
     defaultValues: { email: '', password: '' },
   });
 
@@ -60,7 +62,15 @@ export default function LoginScreen() {
       description="Sign in with your Achievo account. Your password is sent to the server and is never stored on this device."
       footer={
         <View style={{ gap: 8 }}>
-          <Button label="Sign in" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
+          <Button
+            label="Sign in"
+            loading={isSubmitting}
+            onPress={() =>
+              void handleSubmit(onSubmit, () => {
+                showToast('Fix the highlighted fields', 'error');
+              })()
+            }
+          />
           <Link href="/(auth)/register" asChild>
             <Pressable accessibilityRole="link" style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
               <AppText variant="label" tone="primary">
@@ -81,7 +91,7 @@ export default function LoginScreen() {
       <Controller
         control={control}
         name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Email"
             autoCapitalize="none"
@@ -91,14 +101,14 @@ export default function LoginScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.email?.message}
+            error={error?.message}
           />
         )}
       />
       <Controller
         control={control}
         name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Password"
             secureTextEntry
@@ -107,7 +117,7 @@ export default function LoginScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.password?.message}
+            error={error?.message}
           />
         )}
       />

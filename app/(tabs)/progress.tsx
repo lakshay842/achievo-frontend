@@ -298,7 +298,7 @@ export default function ProgressScreen() {
                   Completion
                 </AppText>
                 <AppText variant="caption" tone="muted">
-                  Kitna kaam complete hua — overall progress for {periodMeaning.toLowerCase()}
+                  Overall progress for {periodMeaning.toLowerCase()}
                 </AppText>
                 <View
                   style={{
@@ -459,7 +459,7 @@ export default function ProgressScreen() {
                   Goals pulse
                 </AppText>
                 <AppText variant="caption" tone="muted">
-                  Har goal ka alag progress — kaunsa goal aage hai
+                  Progress by goal — see which ones are ahead
                 </AppText>
                 <Card>
                   {(overview?.goals ?? []).length === 0 ? (

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Home } from 'lucide-react-native';
 
+import { TypingDots } from '@/components/coach';
 import { AppText } from '@/components/common/app-text';
 import { Button } from '@/components/common/button';
 import { IconButton } from '@/components/common/icon-button';
@@ -29,7 +30,12 @@ type ChatMessage = {
   dayLabel?: string;
 };
 
-const suggestions = ['Help me start today', 'Break my next task down', 'I missed yesterday'];
+const suggestions = [
+  'What is my next task?',
+  'Explain Java simply',
+  'Help me start today',
+  'I missed yesterday',
+];
 
 export default function CoachScreen() {
   const { colors } = useTheme();
@@ -138,7 +144,7 @@ export default function CoachScreen() {
       <View style={{ flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg, gap: spacing.md }}>
         <ScreenHeading
           title="AI Coach"
-          subtitle="Questions, practice, and a push"
+          subtitle="One place for tasks, answers, and progress"
           trailing={<IconButton icon={Home} label="Home" onPress={() => router.replace('/(tabs)')} />}
         />
         {motivationQuery.data ? (
@@ -167,7 +173,7 @@ export default function CoachScreen() {
             empty ? (
               <View style={{ gap: 12, paddingVertical: 24 }}>
                 <AppText variant="body" tone="muted">
-                  Ask about a task, ask for practice, or ask for motivation. Messages go through Achievo — never to a model from this phone.
+                  Ask here, get a clear next task, and keep progress in one place. Write in English or Hindi — the coach matches your language.
                 </AppText>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {suggestions.map((suggestion) => (
@@ -223,13 +229,7 @@ export default function CoachScreen() {
               </View>
             </View>
           )}
-          ListFooterComponent={
-            chatMutation.isPending ? (
-              <AppText variant="caption" tone="muted">
-                Coach is typing…
-              </AppText>
-            ) : undefined
-          }
+          ListFooterComponent={chatMutation.isPending ? <TypingDots /> : undefined}
         />
 
         <View style={{ gap: 10, paddingBottom: Math.max(insets.bottom, 8) }}>

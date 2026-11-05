@@ -46,7 +46,7 @@ export function fetchMe() {
 }
 
 export function forgotPassword(email: string) {
-  return requestData<{ delivered: boolean; resetToken?: string }>({
+  return requestData<{ delivered: boolean; emailed?: boolean; resetToken?: string }>({
     method: 'POST',
     url: '/auth/forgot-password',
     data: { email },

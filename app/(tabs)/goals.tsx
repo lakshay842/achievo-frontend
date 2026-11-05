@@ -258,7 +258,7 @@ export default function GoalsScreen() {
         title="Delete goal?"
         message={
           pendingDelete
-            ? `"${pendingDelete.title}" aur uske tasks/roadmap delete ho jayenge. Ye undo nahi hoga.`
+            ? `"${pendingDelete.title}" and its tasks/roadmap will be deleted. This cannot be undone.`
             : ''
         }
         confirmLabel="Delete"

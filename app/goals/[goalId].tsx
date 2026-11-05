@@ -448,7 +448,7 @@ export default function GoalDetailsScreen() {
       <View style={{ gap: spacing.md }}>
         <SectionHeader
           title="Milestones"
-          meaning="Yeh progress info hai — clickable nahi. Neeche tasks pe tap karo"
+          meaning="Progress overview — not tappable. Use the task cards below"
           count={milestones.length}
           accent={colors.lavender}
         />
@@ -520,7 +520,7 @@ export default function GoalDetailsScreen() {
       <View style={{ gap: spacing.md }}>
         <SectionHeader
           title="Upcoming"
-          meaning="In cards pe tap karo — task open hoga"
+          meaning="Tap a card to open the task"
           count={upcoming.length}
           accent={colors.primary}
         />
@@ -634,7 +634,7 @@ export default function GoalDetailsScreen() {
       <View style={{ gap: spacing.md }}>
         <SectionHeader
           title="Completed"
-          meaning="In pe bhi tap karo — details dekhne ke liye"
+          meaning="Tap these too to open details"
           count={completed.length}
           accent={colors.coral}
         />

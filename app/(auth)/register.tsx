@@ -16,9 +16,9 @@ import { getErrorMessage } from '@/utils/errors';
 
 const schema = z
   .object({
-    name: z.string().trim().min(1, 'Name is required').max(80),
-    email: z.email('Enter a valid email'),
-    password: z.string().min(8, 'Use at least 8 characters').max(128),
+    name: z.string().trim().min(1, 'Name is required').max(80, 'Name is too long'),
+    email: z.string().trim().min(1, 'Email is required').pipe(z.email('Enter a valid email')),
+    password: z.string().min(8, 'Use at least 8 characters').max(128, 'Password is too long'),
     confirmPassword: z.string().min(1, 'Confirm your password'),
   })
   .refine((values) => values.password === values.confirmPassword, {
@@ -36,9 +36,11 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
     defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
   });
 
@@ -72,7 +74,15 @@ export default function RegisterScreen() {
       description="Your name, email, and password are sent to Achievo. The password is not kept on this device."
       footer={
         <View style={{ gap: 8 }}>
-          <Button label="Create account" loading={isSubmitting} onPress={() => void handleSubmit(onSubmit)()} />
+          <Button
+            label="Create account"
+            loading={isSubmitting}
+            onPress={() =>
+              void handleSubmit(onSubmit, () => {
+                showToast('Fix the highlighted fields', 'error');
+              })()
+            }
+          />
           <Link href="/(auth)/login" asChild>
             <Pressable accessibilityRole="link" style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
               <AppText variant="label" tone="primary">
@@ -86,7 +96,7 @@ export default function RegisterScreen() {
       <Controller
         control={control}
         name="name"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Name"
             autoComplete="name"
@@ -94,14 +104,14 @@ export default function RegisterScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.name?.message}
+            error={error?.message}
           />
         )}
       />
       <Controller
         control={control}
         name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Email"
             autoCapitalize="none"
@@ -111,14 +121,14 @@ export default function RegisterScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.email?.message}
+            error={error?.message}
           />
         )}
       />
       <Controller
         control={control}
         name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Password"
             secureTextEntry
@@ -127,14 +137,14 @@ export default function RegisterScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.password?.message}
+            error={error?.message}
           />
         )}
       />
       <Controller
         control={control}
         name="confirmPassword"
-        render={({ field: { onChange, onBlur, value } }) => (
+        render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
           <TextField
             label="Confirm password"
             secureTextEntry
@@ -143,7 +153,7 @@ export default function RegisterScreen() {
             value={value}
             onBlur={onBlur}
             onChangeText={onChange}
-            error={errors.confirmPassword?.message}
+            error={error?.message}
           />
         )}
       />

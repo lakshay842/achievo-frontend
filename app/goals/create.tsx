@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View } from 'react-native';
 import { z } from 'zod';
@@ -17,12 +17,80 @@ import { useGoalStore } from '@/store/goal.store';
 import { useOnboardingStore } from '@/store/onboarding.store';
 import { getErrorMessage } from '@/utils/errors';
 
+const FILLER_PREFIX =
+  /^(i\s+want\s+to|i'd\s+like\s+to|i\s+would\s+like\s+to|i\s+need\s+to|i\s+hope\s+to|help\s+me\s+to|help\s+me|my\s+goal\s+is\s+to|my\s+goal\s+is)\s+/i;
+
+const STOP_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'to',
+  'in',
+  'on',
+  'for',
+  'of',
+  'and',
+  'or',
+  'with',
+  'from',
+  'my',
+  'me',
+  'i',
+  'can',
+  'will',
+  'would',
+  'that',
+  'this',
+  'it',
+  'as',
+  'at',
+  'by',
+  'is',
+  'be',
+  'am',
+  'are',
+  'daily',
+  'study',
+  'studying',
+  'hours',
+  'hour',
+  'days',
+  'day',
+  'minutes',
+  'minute',
+]);
+
+/** Short goal title from free text — max 5 words, never the full sentence. */
+function deriveShortTitle(text: string): string {
+  const firstSentence = text.trim().split(/[.!?\n]/)[0]?.trim() ?? '';
+  if (firstSentence.length < 8) {
+    return '';
+  }
+
+  const withoutPrefix = firstSentence.replace(FILLER_PREFIX, '').trim() || firstSentence;
+  const tokens = withoutPrefix
+    .split(/[^a-zA-Z0-9+#]+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .filter((token) => !STOP_WORDS.has(token.toLowerCase()) && !/^\d+$/.test(token) && token.length > 1);
+
+  const words = (tokens.length > 0 ? tokens : withoutPrefix.split(/\s+/).filter((w) => w.length > 1)).slice(0, 5);
+  if (words.length === 0) {
+    return '';
+  }
+
+  return words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .slice(0, 80);
+}
+
 const schema = z.object({
   naturalLanguage: z.string().optional(),
   title: z.string().trim().min(1, 'Title is required').max(200),
   category: z.string().min(1),
   currentLevel: z.string().trim().min(1, 'Current level is required').max(200),
-  desiredOutcome: z.string().trim().min(1, 'Target is required').max(2000),
+  desiredOutcome: z.string().trim().max(2000).optional(),
   availableMinutesPerDay: z.number().int().min(15).max(480),
   durationDays: z
     .string()
@@ -43,6 +111,7 @@ export default function CreateGoalScreen() {
   const dailyMinutes = useOnboardingStore((state) => state.dailyMinutes);
   const interests = useOnboardingStore((state) => state.interests);
   const [analyzing, setAnalyzing] = useState(false);
+  const titleEditedByUser = useRef(false);
 
   const {
     control,
@@ -73,7 +142,13 @@ export default function CreateGoalScreen() {
       return;
     }
 
-    setValue('title', cleaned.slice(0, 200), { shouldValidate: true });
+    if (!titleEditedByUser.current) {
+      const shortTitle = deriveShortTitle(cleaned);
+      if (shortTitle) {
+        setValue('title', shortTitle, { shouldValidate: true });
+      }
+    }
+
     const days = cleaned.match(/(\d+)\s*days?/i);
     if (days?.[1]) {
       setValue('durationDays', days[1], { shouldValidate: true });
@@ -82,15 +157,8 @@ export default function CreateGoalScreen() {
     if (hours?.[1]) {
       setValue('availableMinutesPerDay', Math.round(Number(hours[1]) * 60), { shouldValidate: true });
     }
-    const beginner = /beginner/i.test(cleaned);
-    const advanced = /advanced/i.test(cleaned);
-    if (beginner) {
+    if (/beginner/i.test(cleaned)) {
       setValue('currentLevel', 'Beginner', { shouldValidate: true });
-    }
-    if (advanced) {
-      setValue('desiredOutcome', 'Reach an advanced level', { shouldValidate: true });
-    } else if (!watch('desiredOutcome')) {
-      setValue('desiredOutcome', cleaned, { shouldValidate: true });
     }
   }
 
@@ -100,12 +168,18 @@ export default function CreateGoalScreen() {
       const description = [values.naturalLanguage?.trim(), values.learningPreference?.trim()]
         .filter(Boolean)
         .join('\n\n');
+      const nl = values.naturalLanguage?.trim() ?? '';
+      const desiredOutcome =
+        values.desiredOutcome?.trim() ||
+        (/advanced/i.test(nl) ? 'Reach an advanced level' : '') ||
+        deriveShortTitle(nl) ||
+        values.title;
       const result = await analyzeGoal({
         title: values.title,
         description: description || undefined,
         category: values.category,
         currentLevel: values.currentLevel,
-        desiredOutcome: values.desiredOutcome,
+        desiredOutcome,
         availableMinutesPerDay: values.availableMinutesPerDay,
         durationDays: Number(values.durationDays),
       });
@@ -128,7 +202,7 @@ export default function CreateGoalScreen() {
   return (
     <FlowScreen
       showNav edges={['top', 'bottom', 'left', 'right']}
-      description="Describe the goal in a sentence, or fill the fields. Nothing is scheduled until you approve a roadmap."
+      description="Describe what you want to learn or change. Achievo builds daily tasks from it, so you do not have to hunt across platforms."
       footer={
         <Button label="Continue with AI" loading={analyzing} onPress={() => void handleSubmit(onSubmit)()} />
       }
@@ -155,7 +229,17 @@ export default function CreateGoalScreen() {
         control={control}
         name="title"
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextField label="Goal title" value={value} onBlur={onBlur} onChangeText={onChange} error={errors.title?.message} />
+          <TextField
+            label="Goal title"
+            placeholder="Auto from your description, or type your own"
+            value={value}
+            onBlur={onBlur}
+            onChangeText={(text) => {
+              titleEditedByUser.current = true;
+              onChange(text);
+            }}
+            error={errors.title?.message}
+          />
         )}
       />
 
@@ -193,6 +277,7 @@ export default function CreateGoalScreen() {
         render={({ field: { onChange, onBlur, value } }) => (
           <TextField
             label="Target level / outcome"
+            placeholder="Optional — e.g. Reach an advanced level"
             multiline
             value={value}
             onBlur={onBlur}
