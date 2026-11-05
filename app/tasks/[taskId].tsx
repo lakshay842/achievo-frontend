@@ -140,9 +140,11 @@ export default function TaskDetailsScreen() {
     enabled: Boolean(taskId),
   });
 
-  const invalidate = async () => {
+  const invalidate = async (goalId?: string | null) => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: queryKeys.task(taskId!) }),
+      // Singular + plural — goal detail uses ['goal', id], list uses ['goals', ...]
+      queryClient.invalidateQueries({ queryKey: ['goal'] }),
       queryClient.invalidateQueries({ queryKey: ['goals'] }),
       queryClient.invalidateQueries({ queryKey: queryKeys.todayTasks }),
       queryClient.invalidateQueries({ queryKey: queryKeys.progressOverview }),
@@ -151,6 +153,10 @@ export default function TaskDetailsScreen() {
       queryClient.invalidateQueries({ queryKey: queryKeys.streaks }),
       queryClient.invalidateQueries({ queryKey: ['progress', 'goal'] }),
       queryClient.invalidateQueries({ queryKey: ['tasks', 'goal'] }),
+      queryClient.invalidateQueries({ queryKey: ['roadmaps'] }),
+      goalId
+        ? queryClient.invalidateQueries({ queryKey: queryKeys.goal(goalId) })
+        : Promise.resolve(),
     ]);
   };
 
@@ -167,8 +173,8 @@ export default function TaskDetailsScreen() {
       }
       return rescheduleTask(taskId, rescheduleDate);
     },
-    onSuccess: async () => {
-      await invalidate();
+    onSuccess: async (updated) => {
+      await invalidate(updated.goalId);
       showToast('Task updated', 'success');
       setPending(null);
     },
@@ -190,7 +196,7 @@ export default function TaskDetailsScreen() {
           : `Saved as ${updated.difficultyFeedback}`,
         'success',
       );
-      await invalidate();
+      await invalidate(updated.goalId);
     },
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });

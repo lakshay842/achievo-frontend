@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import {
   Archive,
   CalendarDays,
@@ -15,7 +15,7 @@ import {
   Route,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -215,6 +215,16 @@ export default function GoalDetailsScreen() {
     queryFn: () => listRoadmaps(goalId!),
     enabled: Boolean(goalId),
   });
+
+  // Refetch when coming back from a completed task so Overall progress updates without a manual refresh.
+  useFocusEffect(
+    useCallback(() => {
+      if (!goalId) return;
+      void goalQuery.refetch();
+      void progressQuery.refetch();
+      void tasksQuery.refetch();
+    }, [goalId]),
+  );
 
   const invalidate = async () => {
     await Promise.all([
@@ -426,10 +436,14 @@ export default function GoalDetailsScreen() {
               Overall progress
             </AppText>
             <AppText variant="heading" style={{ color: colors.onPrimary }}>
-              {Math.round(goal.progressPercent)}%
+              {Math.round(progressQuery.data?.progressPercent ?? goal.progressPercent)}%
             </AppText>
           </View>
-          <ProgressTrack value={goal.progressPercent} color={colors.onPrimary} track="rgba(0,0,0,0.18)" />
+          <ProgressTrack
+            value={progressQuery.data?.progressPercent ?? goal.progressPercent}
+            color={colors.onPrimary}
+            track="rgba(0,0,0,0.18)"
+          />
         </View>
       </View>
 

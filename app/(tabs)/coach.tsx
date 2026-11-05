@@ -92,15 +92,64 @@ export default function CoachScreen() {
 
   const chatMutation = useMutation({
     mutationFn: coachChat,
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data) => {
       setConversationId(data.conversationId);
       setInput('');
       stickToEnd.current = true;
-      await queryClient.invalidateQueries({ queryKey: queryKeys.coachHistory });
+      const now = new Date().toISOString();
+      setMessages((current) => {
+        const stabilized = current.map((item) =>
+          item.id.startsWith('pending-') ? { ...item, id: `local-user-${now}` } : item,
+        );
+        return [
+          ...stabilized,
+          {
+            id: `local-ai-${now}`,
+            role: 'ai' as const,
+            text: toPlainText(data.reply),
+            createdAt: now,
+          },
+        ];
+      });
       scrollChatToEnd(true);
-      void variables;
+      await queryClient.invalidateQueries({ queryKey: queryKeys.coachHistory });
     },
-    onError: (error) => {
+    onError: async (error) => {
+      stickToEnd.current = true;
+      // Server often finishes after a client timeout — recover chat from history instead of wiping.
+      try {
+        const history = await getCoachHistory(conversationId);
+        if (history.conversationId) {
+          setConversationId(history.conversationId);
+        }
+        if (history.messages.length > 0) {
+          let lastDay = '';
+          setMessages(
+            history.messages.map((item, index) => {
+              const dayLabel = formatChatDay(item.createdAt);
+              const showDay = dayLabel !== lastDay;
+              lastDay = dayLabel;
+              return {
+                id: `${item.createdAt}-${item.role}-${index}`,
+                role: item.role === 'assistant' ? ('ai' as const) : ('user' as const),
+                text: item.role === 'assistant' ? toPlainText(item.content) : item.content,
+                createdAt: item.createdAt,
+                dayLabel: showDay ? dayLabel : undefined,
+              };
+            }),
+          );
+          await queryClient.invalidateQueries({ queryKey: queryKeys.coachHistory });
+          const timedOut = /timed out/i.test(getErrorMessage(error));
+          showToast(
+            timedOut ? 'Reply saved — chat refreshed' : getErrorMessage(error),
+            timedOut ? 'success' : 'error',
+          );
+          scrollChatToEnd(true);
+          return;
+        }
+      } catch {
+        // Fall through to clear optimistic bubble.
+      }
       setMessages((current) => current.filter((item) => !item.id.startsWith('pending-')));
       showToast(getErrorMessage(error), 'error');
     },

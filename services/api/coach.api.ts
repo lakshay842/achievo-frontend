@@ -26,6 +26,8 @@ export async function coachChat(input: {
     method: 'POST',
     url: '/coach/chat',
     data: input,
+    // Production Gemini + cold starts often exceed the default 60s.
+    timeout: 120_000,
   });
   return response.data.data;
 }
