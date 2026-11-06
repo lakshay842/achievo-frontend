@@ -26,8 +26,8 @@ export function IconButton({ icon: Icon, label, style, ...props }: IconButtonPro
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: pressed ? colors.secondarySoft : colors.card,
-          borderWidth: 1,
-          borderColor: colors.border,
+          borderWidth: 1.5,
+          borderColor: colors.inputBorder,
         },
         style,
       ]}

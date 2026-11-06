@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { SendHorizontal } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +9,6 @@ import { Home } from 'lucide-react-native';
 
 import { TypingDots } from '@/components/coach';
 import { AppText } from '@/components/common/app-text';
-import { Button } from '@/components/common/button';
 import { IconButton } from '@/components/common/icon-button';
 import { Screen } from '@/components/common/screen';
 import { ScreenHeading } from '@/components/common/screen-heading';
@@ -17,7 +17,7 @@ import { useToast } from '@/components/common/toast';
 import { queryKeys } from '@/constants/query-keys';
 import { useTheme } from '@/hooks/use-theme';
 import { coachChat, getCoachHistory, getMotivation } from '@/services/api/coach.api';
-import { radius, spacing } from '@/theme/spacing';
+import { radius, spacing, touchTarget } from '@/theme/spacing';
 import { formatChatDay, formatChatTime } from '@/utils/date';
 import { getErrorMessage } from '@/utils/errors';
 import { toPlainText } from '@/utils/plain-text';
@@ -161,6 +161,7 @@ export default function CoachScreen() {
   }, [messages.length, chatMutation.isPending]);
 
   const empty = useMemo(() => messages.length === 0 && !historyQuery.isLoading, [messages.length, historyQuery.isLoading]);
+  const canSend = Boolean(input.trim()) && !chatMutation.isPending;
 
   function send(message: string) {
     const trimmed = message.trim();
@@ -184,29 +185,35 @@ export default function CoachScreen() {
         },
       ];
     });
+    setInput('');
     chatMutation.mutate({ message: trimmed, conversationId });
     scrollChatToEnd(true);
   }
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <View style={{ flex: 1, paddingHorizontal: spacing.xl, paddingTop: spacing.lg, gap: spacing.md }}>
-        <ScreenHeading
-          title="AI Coach"
-          subtitle="One place for tasks, answers, and progress"
-          trailing={<IconButton icon={Home} label="Home" onPress={() => router.replace('/(tabs)')} />}
-        />
-        {motivationQuery.data ? (
-          <AppText variant="caption" tone="muted">
-            {motivationQuery.data.message}
-          </AppText>
-        ) : null}
+      <View style={{ flex: 1, paddingTop: spacing.lg, gap: spacing.md }}>
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.sm }}>
+          <ScreenHeading
+            title="AI Coach"
+            subtitle="One place for tasks, answers, and progress"
+            trailing={<IconButton icon={Home} label="Home" onPress={() => router.replace('/(tabs)')} />}
+          />
+          {motivationQuery.data ? (
+            <AppText variant="caption" tone="muted">
+              {motivationQuery.data.message}
+            </AppText>
+          ) : null}
+        </View>
 
         <FlatList
           ref={listRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ gap: 12, paddingBottom: 12, flexGrow: 1 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ gap: 12, paddingHorizontal: spacing.xl, paddingBottom: 12, flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           onContentSizeChange={() => {
             if (stickToEnd.current) scrollChatToEnd(true);
           }}
@@ -231,8 +238,8 @@ export default function CoachScreen() {
                       onPress={() => send(suggestion)}
                       style={{
                         borderRadius: radius.full,
-                        borderWidth: 1,
-                        borderColor: colors.border,
+                        borderWidth: 1.5,
+                        borderColor: colors.inputBorder,
                         backgroundColor: colors.card,
                         paddingHorizontal: 14,
                         paddingVertical: 10,
@@ -257,8 +264,8 @@ export default function CoachScreen() {
                   alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '88%',
                   backgroundColor: item.role === 'user' ? colors.primary : colors.card,
-                  borderColor: colors.border,
-                  borderWidth: item.role === 'user' ? 0 : 1,
+                  borderColor: colors.inputBorder,
+                  borderWidth: item.role === 'user' ? 0 : 1.5,
                   borderRadius: radius.lg,
                   paddingHorizontal: 14,
                   paddingVertical: 12,
@@ -281,16 +288,58 @@ export default function CoachScreen() {
           ListFooterComponent={chatMutation.isPending ? <TypingDots /> : undefined}
         />
 
-        <View style={{ gap: 10, paddingBottom: Math.max(insets.bottom, 8) }}>
-          <TextField
-            label="Message"
-            value={input}
-            onChangeText={setInput}
-            placeholder="Ask your coach"
-            multiline
-            style={{ minHeight: 88 }}
-          />
-          <Button label="Send" loading={chatMutation.isPending} onPress={() => send(input)} />
+        <View
+          style={{
+            borderTopWidth: 1.5,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+            paddingHorizontal: spacing.lg,
+            paddingTop: spacing.sm,
+            paddingBottom: Math.max(insets.bottom, 8),
+            gap: 8,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10 }}>
+            <TextField
+              compact
+              label="Message"
+              value={input}
+              onChangeText={setInput}
+              placeholder="Ask your coach…"
+              multiline
+              blurOnSubmit={false}
+              returnKeyType="default"
+              style={{ minHeight: 44, maxHeight: 120 }}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Send message"
+              accessibilityState={{ disabled: !canSend, busy: chatMutation.isPending }}
+              disabled={!canSend}
+              onPress={() => send(input)}
+              style={({ pressed }) => ({
+                width: touchTarget,
+                height: touchTarget,
+                borderRadius: radius.full,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: canSend
+                  ? pressed
+                    ? colors.primaryPressed
+                    : colors.primary
+                  : colors.secondarySoft,
+                borderWidth: 1.5,
+                borderColor: canSend ? colors.buttonBorder : colors.inputBorder,
+                opacity: canSend ? 1 : 0.7,
+              })}
+            >
+              <SendHorizontal
+                color={canSend ? colors.onPrimary : colors.textMuted}
+                size={20}
+                strokeWidth={2.4}
+              />
+            </Pressable>
+          </View>
         </View>
       </View>
     </Screen>

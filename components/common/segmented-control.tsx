@@ -38,16 +38,16 @@ export function SegmentedControl<T extends string>({ label, value, options, onCh
               flex: 1,
               minHeight: touchTarget,
               borderRadius: radius.md,
-              borderWidth: 1,
-              borderColor: selected ? colors.primary : colors.border,
-              backgroundColor: selected ? colors.secondarySoft : colors.card,
+              borderWidth: 1.5,
+              borderColor: selected ? colors.buttonBorder : colors.inputBorder,
+              backgroundColor: selected ? `${colors.primary}22` : colors.card,
               alignItems: 'center',
               justifyContent: 'center',
               gap: 4,
               paddingHorizontal: 8,
             }}
           >
-            {Icon ? <Icon color={selected ? colors.primary : colors.iconMuted} size={16} strokeWidth={2} /> : null}
+            {Icon ? <Icon color={selected ? colors.primaryText : colors.iconMuted} size={16} strokeWidth={2} /> : null}
             <AppText variant="caption" tone={selected ? 'primary' : 'muted'}>
               {option.label}
             </AppText>

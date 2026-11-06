@@ -20,8 +20,9 @@ export function Card({ children, style }: CardProps) {
         {
           backgroundColor: colors.card,
           borderRadius: radius.xl,
-          borderWidth: scheme === 'dark' ? 0 : 1,
-          borderColor: colors.border,
+          borderWidth: 1.5,
+          borderColor: colors.inputBorder,
+          overflow: 'hidden',
         },
         cardShadow(scheme),
         style,

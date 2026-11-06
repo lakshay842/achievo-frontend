@@ -22,9 +22,9 @@ export function ChoiceChip({ label, selected = false, onPress }: ChoiceChipProps
         minHeight: touchTarget - 8,
         paddingHorizontal: 14,
         borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: selected ? colors.primary : colors.border,
-        backgroundColor: selected ? colors.secondarySoft : colors.card,
+        borderWidth: 1.5,
+        borderColor: selected ? colors.buttonBorder : colors.inputBorder,
+        backgroundColor: selected ? `${colors.primary}22` : colors.card,
         alignItems: 'center',
         justifyContent: 'center',
       }}

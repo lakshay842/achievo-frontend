@@ -52,6 +52,10 @@ function ActionButton({
   onPress: () => void;
   flex?: boolean;
 }) {
+  const { scheme } = useTheme();
+  const fill = scheme === 'dark' ? `${color}33` : `${color}1F`;
+  const pressedFill = scheme === 'dark' ? `${color}55` : `${color}33`;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -61,11 +65,12 @@ function ActionButton({
       style={({ pressed }) => ({
         flex: flex ? 1 : undefined,
         width: flex ? undefined : '100%',
+        alignSelf: 'stretch',
         minHeight: 52,
         borderRadius: radius.full,
-        borderWidth: 1,
-        borderColor: `${color}55`,
-        backgroundColor: pressed ? `${color}28` : `${color}16`,
+        borderWidth: 1.5,
+        borderColor: color,
+        backgroundColor: pressed ? pressedFill : fill,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
@@ -78,7 +83,7 @@ function ActionButton({
       ) : (
         <>
           <Icon color={color} size={17} strokeWidth={2.3} />
-          <AppText variant="label" style={{ color }}>
+          <AppText variant="label" style={{ color, fontWeight: '600' }}>
             {label}
           </AppText>
         </>
@@ -306,15 +311,8 @@ export default function GoalDetailsScreen() {
       footer={
         <View
           style={{
-            marginHorizontal: -spacing.xl,
-            marginBottom: -spacing.xl,
-            paddingHorizontal: spacing.xl,
-            paddingTop: spacing.md,
-            paddingBottom: Math.max(insets.bottom, spacing.md),
             gap: 10,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            backgroundColor: colors.background,
+            paddingBottom: Math.max(0, insets.bottom - spacing.sm),
           }}
         >
           {showActivate ? (
@@ -560,22 +558,27 @@ export default function GoalDetailsScreen() {
                 <Card
                   style={{
                     gap: 12,
-                    borderWidth: 1,
-                    borderColor: `${colors.primary}55`,
-                    backgroundColor: `${colors.primary}0F`,
+                    borderWidth: 1.5,
+                    borderColor: colors.inputBorder,
+                    backgroundColor: colors.card,
+                    overflow: 'hidden',
                   }}
                 >
-                  <View className="flex-row items-start justify-between" style={{ gap: 12 }}>
-                    <View className="flex-1" style={{ gap: 8 }}>
-                      <AppText variant="label">{task.title}</AppText>
-                      <View className="flex-row flex-wrap items-center" style={{ gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                    <View style={{ flex: 1, minWidth: 0, gap: 8 }}>
+                      <AppText variant="label" numberOfLines={3}>
+                        {task.title}
+                      </AppText>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                         <View
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
                             gap: 6,
                             borderRadius: radius.full,
-                            backgroundColor: colors.card,
+                            backgroundColor: colors.notice,
+                            borderWidth: 1,
+                            borderColor: colors.border,
                             paddingHorizontal: 10,
                             paddingVertical: 5,
                           }}
@@ -591,7 +594,9 @@ export default function GoalDetailsScreen() {
                             alignItems: 'center',
                             gap: 5,
                             borderRadius: radius.full,
-                            backgroundColor: `${tone.fg}18`,
+                            backgroundColor: `${tone.fg}22`,
+                            borderWidth: 1,
+                            borderColor: `${tone.fg}66`,
                             paddingHorizontal: 10,
                             paddingVertical: 5,
                           }}
@@ -614,6 +619,9 @@ export default function GoalDetailsScreen() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         backgroundColor: colors.primary,
+                        borderWidth: 1,
+                        borderColor: colors.buttonBorder,
+                        flexShrink: 0,
                       }}
                     >
                       <ChevronRight color={colors.onPrimary} size={18} strokeWidth={2.4} />
@@ -626,14 +634,15 @@ export default function GoalDetailsScreen() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderTopWidth: 1,
-                      borderTopColor: `${colors.primary}33`,
+                      borderTopColor: colors.border,
                       paddingTop: 10,
+                      gap: 8,
                     }}
                   >
-                    <AppText variant="caption" style={{ color: colors.primary }}>
+                    <AppText variant="caption" style={{ color: colors.primaryText, flexShrink: 1 }} numberOfLines={1}>
                       Tap to open task
                     </AppText>
-                    <AppText variant="caption" style={{ color: colors.primary }}>
+                    <AppText variant="caption" style={{ color: colors.primaryText, fontWeight: '600' }}>
                       Open →
                     </AppText>
                   </View>
@@ -688,8 +697,10 @@ export default function GoalDetailsScreen() {
                   >
                     <CheckCircle2 color={colors.primary} size={18} strokeWidth={2.2} />
                   </View>
-                  <View className="flex-1" style={{ gap: 2 }}>
-                    <AppText variant="label">{task.title}</AppText>
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                    <AppText variant="label" numberOfLines={2}>
+                      {task.title}
+                    </AppText>
                     <AppText variant="caption" tone="muted">
                       {task.completedAt
                         ? new Date(task.completedAt).toLocaleString(undefined, {

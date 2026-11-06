@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, type ScrollViewInstance } from 'react-native';
 import type { Edges } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/common/app-text';
@@ -37,7 +37,7 @@ export function FlowScreen({
   showHome = true,
 }: FlowScreenProps) {
   const { colors } = useTheme();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const shouldStick = useRef(true);
   const lastHeight = useRef(0);
 
@@ -74,6 +74,7 @@ export function FlowScreen({
           flexGrow: 1,
         }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         onContentSizeChange={(_width, height) => {
           if (!stickToEnd) return;
 
@@ -99,7 +100,19 @@ export function FlowScreen({
         {children}
       </ScrollView>
       {footer ? (
-        <View style={{ paddingHorizontal: spacing.xl, paddingBottom: spacing.xl, gap: spacing.md }}>{footer}</View>
+        <View
+          style={{
+            paddingHorizontal: spacing.xl,
+            paddingTop: spacing.md,
+            paddingBottom: spacing.xl,
+            gap: spacing.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+          }}
+        >
+          {footer}
+        </View>
       ) : null}
     </Screen>
   );

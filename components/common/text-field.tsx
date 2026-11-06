@@ -10,40 +10,73 @@ import { radius } from '@/theme/spacing';
 type TextFieldProps = TextInputProps & {
   label: string;
   error?: string;
+  /** Compact single-line composer for chat bars. */
+  compact?: boolean;
 };
 
 export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function TextField(
-  { label, error, style, secureTextEntry, ...props },
+  {
+    label,
+    error,
+    style,
+    secureTextEntry,
+    compact = false,
+    multiline,
+    onFocus,
+    onBlur,
+    ...props
+  },
   ref,
 ) {
-  const { colors, fontsReady } = useTheme();
+  const { colors, fontsReady, scheme } = useTheme();
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
   const isPassword = secureTextEntry === true;
   const hideSecret = isPassword && !visible;
+  const borderColor = error ? colors.error : focused ? colors.primary : colors.inputBorder;
 
   return (
-    <View style={{ gap: 8 }}>
-      <AppText variant="label">{label}</AppText>
-      <View style={{ position: 'relative', justifyContent: 'center' }}>
+    <View style={{ gap: compact ? 0 : 8, flex: compact ? 1 : undefined }}>
+      {compact ? null : <AppText variant="label">{label}</AppText>}
+      <View style={{ position: 'relative', justifyContent: 'center', flex: compact ? 1 : undefined }}>
         <TextInput
           ref={ref}
           placeholderTextColor={colors.textMuted}
           accessibilityLabel={label}
           secureTextEntry={hideSecret}
+          multiline={multiline}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
           style={[
             {
-              minHeight: props.multiline ? 120 : 48,
-              borderWidth: 1,
-              borderColor: error ? colors.error : colors.border,
+              minHeight: compact ? 44 : multiline ? 120 : 48,
+              maxHeight: compact && multiline ? 120 : undefined,
+              borderWidth: 1.5,
+              borderColor,
               backgroundColor: colors.card,
-              borderRadius: radius.md,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              paddingRight: isPassword ? 48 : 14,
+              borderRadius: compact ? radius.full : radius.md,
+              paddingHorizontal: compact ? 16 : 14,
+              paddingVertical: compact ? 10 : 12,
+              paddingRight: isPassword ? 48 : compact ? 16 : 14,
               color: colors.text,
               fontSize: 16,
-              textAlignVertical: props.multiline ? 'top' : 'center',
+              textAlignVertical: multiline ? 'top' : 'center',
               ...(fontsReady ? { fontFamily: fontFamily.regular } : {}),
+              ...(scheme === 'dark'
+                ? {
+                    shadowColor: '#000',
+                    shadowOpacity: 0.35,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                    elevation: 2,
+                  }
+                : {}),
             },
             style,
           ]}

@@ -30,7 +30,7 @@ export function AppText({ variant = 'body', tone = 'default', style, ...props }:
   const color = {
     default: colors.text,
     muted: colors.textMuted,
-    primary: colors.primary,
+    primary: colors.primaryText,
     inverse: colors.onPrimary,
     danger: colors.error,
     success: colors.success,

@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import { House, Sparkles, Target, TrendingUp, UserRound } from 'lucide-react-native';
 import type { ComponentProps } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 import { fontFamily } from '@/theme/typography';
@@ -25,18 +26,32 @@ type AppTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar
 
 export function AppTabBar({ state, descriptors, emitter, navigateToTab, insets }: AppTabBarProps) {
   const { colors, fontsReady } = useTheme();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  if (keyboardVisible) {
+    return null;
+  }
 
   return (
     <View
       style={{
         backgroundColor: colors.tabBar,
-        borderTopWidth: 1,
+        borderTopWidth: 1.5,
         borderTopColor: colors.border,
         paddingTop: 8,
         paddingBottom: Math.max(insets.bottom, 10),
       }}
     >
-      <View className="flex-row">
+      <View style={{ flexDirection: 'row' }}>
         {state.routes.map((route, index) => {
           if (!isTabName(route.name)) {
             return null;
@@ -46,7 +61,7 @@ export function AppTabBar({ state, descriptors, emitter, navigateToTab, insets }
           const focused = state.index === index;
           const descriptor = descriptors[route.key];
           const Icon = tab.icon;
-          const color = focused ? colors.primary : colors.iconMuted;
+          const color = focused ? colors.primaryText : colors.iconMuted;
 
           return (
             <Pressable
@@ -83,7 +98,9 @@ export function AppTabBar({ state, descriptors, emitter, navigateToTab, insets }
                   alignItems: 'center',
                   justifyContent: 'center',
                   paddingHorizontal: 10,
-                  backgroundColor: focused ? `${colors.primary}22` : 'transparent',
+                  backgroundColor: focused ? `${colors.primary}33` : 'transparent',
+                  borderWidth: focused ? 1 : 0,
+                  borderColor: focused ? colors.buttonBorder : 'transparent',
                 }}
               >
                 <Icon color={color} size={22} strokeWidth={focused ? 2.4 : 2} />
