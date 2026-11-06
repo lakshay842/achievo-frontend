@@ -36,9 +36,9 @@ export const TextField = forwardRef<TextInputInstance, TextFieldProps>(function 
   const borderColor = error ? colors.error : focused ? colors.primary : colors.inputBorder;
 
   return (
-    <View style={{ gap: compact ? 0 : 8, flex: compact ? 1 : undefined }}>
+    <View style={{ gap: compact ? 0 : 8, flex: compact ? 1 : undefined, minWidth: 0 }}>
       {compact ? null : <AppText variant="label">{label}</AppText>}
-      <View style={{ position: 'relative', justifyContent: 'center', flex: compact ? 1 : undefined }}>
+      <View style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
         <TextInput
           ref={ref}
           placeholderTextColor={colors.textMuted}

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SendHorizontal } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Keyboard, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
@@ -14,6 +15,7 @@ import { Screen } from '@/components/common/screen';
 import { ScreenHeading } from '@/components/common/screen-heading';
 import { TextField } from '@/components/common/text-field';
 import { useToast } from '@/components/common/toast';
+import { BRAND } from '@/constants/brand';
 import { queryKeys } from '@/constants/query-keys';
 import { useTheme } from '@/hooks/use-theme';
 import { coachChat, getCoachHistory, getMotivation } from '@/services/api/coach.api';
@@ -45,8 +47,24 @@ export default function CoachScreen() {
   const [input, setInput] = useState('');
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const stickToEnd = useRef(true);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+      stickToEnd.current = true;
+      scrollChatToEnd(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   function scrollChatToEnd(animated = true) {
     requestAnimationFrame(() => {
@@ -190,10 +208,14 @@ export default function CoachScreen() {
     scrollChatToEnd(true);
   }
 
+  // Tab bar hides while typing, so pad by the full keyboard height only — no extra
+  // KeyboardAvoidingView (that was shoving the composer + separator line to the top).
+  const composerBottomPad = keyboardHeight > 0 ? Math.max(keyboardHeight, 8) : Math.max(insets.bottom, 8);
+
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <View style={{ flex: 1, paddingTop: spacing.lg, gap: spacing.md }}>
-        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.sm }}>
+    <Screen edges={['top', 'left', 'right']} keyboardAvoiding={false}>
+      <View style={{ flex: 1, paddingTop: spacing.lg }}>
+        <View style={{ paddingHorizontal: spacing.xl, gap: spacing.sm, marginBottom: spacing.md }}>
           <ScreenHeading
             title="AI Coach"
             subtitle="One place for tasks, answers, and progress"
@@ -213,7 +235,7 @@ export default function CoachScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={{ gap: 12, paddingHorizontal: spacing.xl, paddingBottom: 12, flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
+          keyboardDismissMode="on-drag"
           onContentSizeChange={() => {
             if (stickToEnd.current) scrollChatToEnd(true);
           }}
@@ -290,16 +312,13 @@ export default function CoachScreen() {
 
         <View
           style={{
-            borderTopWidth: 1.5,
-            borderTopColor: colors.border,
             backgroundColor: colors.background,
             paddingHorizontal: spacing.lg,
             paddingTop: spacing.sm,
-            paddingBottom: Math.max(insets.bottom, 8),
-            gap: 8,
+            paddingBottom: composerBottomPad,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <TextField
               compact
               label="Message"
@@ -309,7 +328,7 @@ export default function CoachScreen() {
               multiline
               blurOnSubmit={false}
               returnKeyType="default"
-              style={{ minHeight: 44, maxHeight: 120 }}
+              style={{ minHeight: 44, maxHeight: 100 }}
             />
             <Pressable
               accessibilityRole="button"
@@ -318,26 +337,46 @@ export default function CoachScreen() {
               disabled={!canSend}
               onPress={() => send(input)}
               style={({ pressed }) => ({
-                width: touchTarget,
-                height: touchTarget,
-                borderRadius: radius.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: canSend
-                  ? pressed
-                    ? colors.primaryPressed
-                    : colors.primary
-                  : colors.secondarySoft,
-                borderWidth: 1.5,
-                borderColor: canSend ? colors.buttonBorder : colors.inputBorder,
-                opacity: canSend ? 1 : 0.7,
+                flexShrink: 0,
+                opacity: canSend ? (pressed ? 0.88 : 1) : 0.65,
               })}
             >
-              <SendHorizontal
-                color={canSend ? colors.onPrimary : colors.textMuted}
-                size={20}
-                strokeWidth={2.4}
-              />
+              {canSend ? (
+                <LinearGradient
+                  colors={[...BRAND.gradient]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: touchTarget,
+                    height: touchTarget,
+                    borderRadius: radius.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    elevation: 4,
+                    shadowColor: BRAND.gradient[0],
+                    shadowOpacity: 0.45,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 2 },
+                  }}
+                >
+                  <SendHorizontal color={BRAND.markInk} size={20} strokeWidth={2.4} />
+                </LinearGradient>
+              ) : (
+                <View
+                  style={{
+                    width: touchTarget,
+                    height: touchTarget,
+                    borderRadius: radius.full,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.card,
+                    borderWidth: 2,
+                    borderColor: colors.inputBorder,
+                  }}
+                >
+                  <SendHorizontal color={colors.textMuted} size={20} strokeWidth={2.4} />
+                </View>
+              )}
             </Pressable>
           </View>
         </View>

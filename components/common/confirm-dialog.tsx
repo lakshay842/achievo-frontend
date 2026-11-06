@@ -25,10 +25,10 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const { colors } = useTheme();
-  const confirmColor = destructive ? colors.coral : colors.primary;
-  const confirmText = destructive ? colors.coral : colors.onPrimary;
-  const confirmBg = destructive ? colors.errorSoft : colors.primary;
+  const { colors, scheme } = useTheme();
+  const confirmBg = destructive ? colors.error : colors.primary;
+  const confirmLabelColor = destructive ? '#FFFFFF' : colors.onPrimary;
+  const cancelBg = scheme === 'dark' ? '#242424' : colors.card;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
@@ -60,11 +60,12 @@ export function ConfirmDialog({
             maxWidth: 380,
             borderRadius: radius.xl,
             backgroundColor: colors.card,
-            borderWidth: 1,
-            borderColor: colors.border,
+            borderWidth: 2,
+            borderColor: colors.inputBorder,
             padding: 22,
             gap: 18,
             zIndex: 1,
+            elevation: 8,
           }}
         >
           <View style={{ gap: 8 }}>
@@ -79,38 +80,47 @@ export function ConfirmDialog({
               accessibilityRole="button"
               accessibilityLabel={cancelLabel}
               onPress={onCancel}
-              style={({ pressed }) => ({
-                flex: 1,
-                minHeight: 48,
-                borderRadius: radius.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: pressed ? colors.secondarySoft : colors.background,
-              })}
+              style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.88 : 1 })}
             >
-              <AppText variant="label">{cancelLabel}</AppText>
+              <View
+                style={{
+                  minHeight: 48,
+                  borderRadius: radius.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2,
+                  borderColor: colors.inputBorder,
+                  backgroundColor: cancelBg,
+                }}
+              >
+                <AppText variant="label" style={{ fontWeight: '700' }}>
+                  {cancelLabel}
+                </AppText>
+              </View>
             </Pressable>
 
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={confirmLabel}
               onPress={onConfirm}
-              style={({ pressed }) => ({
-                flex: 1,
-                minHeight: 48,
-                borderRadius: radius.full,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: `${confirmColor}66`,
-                backgroundColor: pressed ? `${confirmColor}33` : confirmBg,
-              })}
+              style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.88 : 1 })}
             >
-              <AppText variant="label" style={{ color: destructive ? confirmText : colors.onPrimary }}>
-                {confirmLabel}
-              </AppText>
+              <View
+                style={{
+                  minHeight: 48,
+                  borderRadius: radius.full,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 2,
+                  borderColor: confirmBg,
+                  backgroundColor: confirmBg,
+                  elevation: 3,
+                }}
+              >
+                <AppText variant="label" style={{ color: confirmLabelColor, fontWeight: '700' }}>
+                  {confirmLabel}
+                </AppText>
+              </View>
             </Pressable>
           </View>
         </View>

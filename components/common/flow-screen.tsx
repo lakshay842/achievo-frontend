@@ -106,8 +106,6 @@ export function FlowScreen({
             paddingTop: spacing.md,
             paddingBottom: spacing.xl,
             gap: spacing.md,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
             backgroundColor: colors.background,
           }}
         >

@@ -75,9 +75,11 @@ function ActionPill({
   solid?: boolean;
   selected?: boolean;
 }) {
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const filled = solid || selected;
   const textColor = filled ? colors.onPrimary : color;
+  const outlineBg = scheme === 'dark' ? '#242424' : colors.card;
+  const outlinePressed = scheme === 'dark' ? '#333333' : colors.secondarySoft;
 
   return (
     <Pressable
@@ -89,34 +91,47 @@ function ActionPill({
       style={({ pressed }) => ({
         flex: flex ? 1 : undefined,
         width: flex ? undefined : '100%',
-        minHeight: 52,
-        borderRadius: radius.full,
-        borderWidth: filled ? 0 : 1,
-        borderColor: `${color}55`,
-        backgroundColor: filled
-          ? pressed
-            ? colors.primaryPressed
-            : color
-          : pressed
-            ? `${color}28`
-            : `${color}16`,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 8,
-        opacity: loading ? 0.6 : 1,
-        paddingHorizontal: 14,
+        alignSelf: 'stretch',
+        opacity: loading ? 0.6 : pressed ? 0.92 : 1,
       })}
     >
-      {loading ? (
-        <ActivityIndicator color={textColor} />
-      ) : (
-        <>
-          <Icon color={textColor} size={17} strokeWidth={2.3} />
-          <AppText variant="label" style={{ color: textColor }}>
-            {label}
-          </AppText>
-        </>
+      {({ pressed }) => (
+        <View
+          style={{
+            minHeight: 52,
+            borderRadius: radius.full,
+            borderWidth: 2,
+            borderColor: color,
+            backgroundColor: filled
+              ? pressed
+                ? colors.primaryPressed
+                : color
+              : pressed
+                ? outlinePressed
+                : outlineBg,
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'row',
+            gap: 8,
+            paddingHorizontal: 14,
+            elevation: 3,
+            shadowColor: color,
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator color={textColor} />
+          ) : (
+            <>
+              <Icon color={textColor} size={17} strokeWidth={2.4} />
+              <AppText variant="label" style={{ color: textColor, fontWeight: '700' }}>
+                {label}
+              </AppText>
+            </>
+          )}
+        </View>
       )}
     </Pressable>
   );

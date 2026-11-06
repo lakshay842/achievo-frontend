@@ -44,6 +44,7 @@ function ActionButton({
   loading,
   onPress,
   flex = false,
+  solid = false,
 }: {
   label: string;
   icon: LucideIcon;
@@ -51,10 +52,11 @@ function ActionButton({
   loading?: boolean;
   onPress: () => void;
   flex?: boolean;
+  solid?: boolean;
 }) {
   const { scheme } = useTheme();
-  const fill = scheme === 'dark' ? `${color}33` : `${color}1F`;
-  const pressedFill = scheme === 'dark' ? `${color}55` : `${color}33`;
+  const outlineBg = scheme === 'dark' ? '#1F1F1F' : '#FFFFFF';
+  const labelColor = solid ? '#0A0A0A' : color;
 
   return (
     <Pressable
@@ -66,28 +68,39 @@ function ActionButton({
         flex: flex ? 1 : undefined,
         width: flex ? undefined : '100%',
         alignSelf: 'stretch',
-        minHeight: 52,
-        borderRadius: radius.full,
-        borderWidth: 1.5,
-        borderColor: color,
-        backgroundColor: pressed ? pressedFill : fill,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 8,
-        opacity: loading ? 0.6 : 1,
+        opacity: loading ? 0.6 : pressed ? 0.88 : 1,
       })}
     >
-      {loading ? (
-        <ActivityIndicator color={color} />
-      ) : (
-        <>
-          <Icon color={color} size={17} strokeWidth={2.3} />
-          <AppText variant="label" style={{ color, fontWeight: '600' }}>
-            {label}
-          </AppText>
-        </>
-      )}
+      <View
+        style={{
+          minHeight: 52,
+          borderRadius: radius.full,
+          borderWidth: solid ? 0 : 2,
+          borderColor: color,
+          backgroundColor: solid ? color : outlineBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
+          gap: 8,
+          paddingHorizontal: 12,
+          elevation: solid ? 4 : 2,
+          shadowColor: color,
+          shadowOpacity: solid ? 0.4 : 0.2,
+          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 2 },
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator color={labelColor} />
+        ) : (
+          <>
+            <Icon color={labelColor} size={17} strokeWidth={2.4} />
+            <AppText variant="label" style={{ color: labelColor, fontWeight: '700' }}>
+              {label}
+            </AppText>
+          </>
+        )}
+      </View>
     </Pressable>
   );
 }
